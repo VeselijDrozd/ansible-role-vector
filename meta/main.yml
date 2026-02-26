@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  author: r.grivnyashkin
+  description: Vector role for logs collection
+  company: netology_students
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: EL
+      versions:
+        - 8
+        - 9
+  galaxy_tags:
+    - vector
+    - logging
+    - clickhouse
+dependencies: []

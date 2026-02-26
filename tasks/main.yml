@@ -1,0 +1,42 @@
+---
+- name: Create logs directory
+  ansible.builtin.file:
+    path: "{{ vector_logs_path }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ vector_logs_owner }}"
+    group: "{{ vector_logs_group }}"
+
+- name: Download Vector RPM
+  ansible.builtin.get_url:
+    url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
+    dest: "/tmp/vector-{{ vector_version }}.rpm"
+    mode: '0644'
+  # Проверяем, нужно ли скачивать (если файла нет или версия изменилась)
+  register: download_rpm
+
+- name: Install Vector
+  ansible.builtin.yum:
+    name: "/tmp/vector-{{ vector_version }}.rpm"
+    state: present
+    disable_gpg_check: true
+  when: download_rpm is changed or download_rpm is skipped
+
+- name: Create Vector configuration directory
+  ansible.builtin.file:
+    path: "{{ vector_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Deploy Vector configuration
+  ansible.builtin.template:
+    src: vector.toml.j2
+    dest: "{{ vector_config_dir }}/vector.toml"
+    mode: '0644'
+  notify: restart vector
+
+- name: Enable and start Vector
+  ansible.builtin.systemd:
+    name: vector
+    enabled: true
+    state: started

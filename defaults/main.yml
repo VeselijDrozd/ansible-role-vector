@@ -1,0 +1,15 @@
+---
+# ПЕРЕОПРЕДЕЛЯЕМЫЕ ПАРАМЕТРЫ
+
+# Версия Vector
+vector_version: "0.21.0"
+
+# Параметры ClickHouse
+clickhouse_host: "127.0.0.1"
+clickhouse_user: "default"
+clickhouse_password: ""
+
+# Параметры для директории с логами
+vector_logs_owner: "root"
+vector_logs_group: "root"
+vector_logs_path: "/var/log/vector"

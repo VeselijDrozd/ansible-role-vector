@@ -1,0 +1,14 @@
+---
+# КОНСТАНТЫ - НЕ МЕНЯТЬ!
+
+# Стандартные пути Vector в Linux
+vector_config_dir: "/etc/vector"
+vector_data_dir: "/var/lib/vector"
+
+# Системные параметры
+vector_system_user: "vector"
+vector_system_group: "vector"
+vector_service_name: "vector"
+
+# Шаблон конфига
+vector_config_template: "vector.toml.j2"
