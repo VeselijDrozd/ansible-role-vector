@@ -1,38 +1,57 @@
-Role Name
-=========
+Vector Role
+===========
 
-A brief description of the role goes here.
+This role provides automated installation and configuration of Vector, a lightweight and ultra-fast tool for building observability pipelines that aggregate, transform and route data (logs, metrics, traces, etc.) to numerous popular destinations.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible >= 2.9
+- RedHat/CentOS/AlmaLinux 8+ (EL 8, 9)
+- Systemd service manager
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Available variables in `defaults/main.yml`:
+
+- `vector_version`: Vector version to install (default: "0.21.0")
+- `clickhouse_host`: ClickHouse server hostname/IP (default: "127.0.0.1")
+- `clickhouse_user`: ClickHouse user (default: "default")
+- `clickhouse_password`: ClickHouse password (default: empty)
+- `vector_logs_owner`: Owner of Vector logs directory (default: "root")
+- `vector_logs_group`: Group of Vector logs directory (default: "root")
+- `vector_logs_path`: Path to Vector logs directory (default: "/var/log/vector")
+- `vector_config_dir`: Vector configuration directory (set in vars)
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+None
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yaml
+---
+- hosts: servers
+  roles:
+    - role: vector
+      vars:
+        vector_version: "0.21.0"
+        clickhouse_host: "clickhouse.example.com"
+        clickhouse_user: "vector_user"
+        clickhouse_password: "secure_password"
+        vector_logs_path: "/var/log/vector"
+```
 
 License
 -------
 
-BSD
+MIT
 
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+- **Author**: R.Grivnyashkin
+- **Company**: netology-students
