@@ -63,9 +63,10 @@
       ansible.builtin.systemd:
         name: vector
         state: restarted
+      when: ansible_facts['service_mgr'] == 'systemd'
   when: vector_config.changed
   rescue:
-    - name: Vector restart failed (expected in container environments)
+    - name: Vector restart failed (expected in non-systemd environments)
       ansible.builtin.debug:
         msg: "Note: Vector service restart skipped due to lack of systemd support"
 
@@ -77,6 +78,7 @@
         enabled: true
         state: started
         daemon_reload: true
+        when: ansible_facts['service_mgr'] == 'systemd'
   rescue:
     - name: Vector systemd failed (expected in container environments without systemd)
       ansible.builtin.debug:

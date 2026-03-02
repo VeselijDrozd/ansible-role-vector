@@ -37,6 +37,10 @@ platforms:
 
 provisioner:
   name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp/.ansible/tmp
+      retry_files_enabled: False
   playbooks:
     converge: converge.yml
     verify: verify.yml

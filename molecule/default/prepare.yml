@@ -3,20 +3,28 @@
   hosts: all
   gather_facts: false
   tasks:
+    - name: Ensure python3 is present on all instances
+      ansible.builtin.raw: |
+        if [ -x /usr/bin/apt-get ]; then
+          apt-get update && apt-get install -y python3
+        elif [ -x /usr/bin/yum ]; then
+          yum install -y python3
+        fi
+      changed_when: false
+
+    - name: Verify python3 binary exists
+      ansible.builtin.raw: test -x /usr/bin/python3
+      register: python_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Fail if python3 was not installed
+      ansible.builtin.fail:
+        msg: "Python3 installation failed, cannot continue prepare stage"
+      when: python_check.rc != 0
+
     - name: Gather facts
       ansible.builtin.setup:
-      ignore_errors: true
-
-    - name: Install python3 on Debian first
-      ansible.builtin.raw: |
-        apt-get update && apt-get install -y python3 2>/dev/null || true
-      when: inventory_hostname.split('-')[0] in ['ubuntu', 'debian']
-      changed_when: false
-      failed_when: false
-
-    - name: Gather facts again
-      ansible.builtin.setup:
-      ignore_errors: true
 
     - name: Install openssh and python3 on all systems
       block:
