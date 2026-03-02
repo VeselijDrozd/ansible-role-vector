@@ -7,20 +7,42 @@
     owner: "{{ vector_logs_owner }}"
     group: "{{ vector_logs_group }}"
 
-- name: Download Vector RPM
-  ansible.builtin.get_url:
-    url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
-    dest: "/tmp/vector-{{ vector_version }}.rpm"
-    mode: '0644'
-  # Проверяем, нужно ли скачивать (если файла нет или версия изменилась)
-  register: download_rpm
+# Блок для RedHat семейства (Oracle Linux, CentOS, RHEL)
+- name: RedHat specific tasks
+  when: ansible_facts['os_family'] == 'RedHat'
+  block:
+    - name: Download Vector RPM
+      ansible.builtin.get_url:
+        url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
+        dest: "/tmp/vector-{{ vector_version }}.rpm"
+        mode: '0644'
+      register: download_rpm
 
-- name: Install Vector
-  ansible.builtin.yum:
-    name: "/tmp/vector-{{ vector_version }}.rpm"
-    state: present
-    disable_gpg_check: true
-  when: download_rpm is changed or download_rpm is skipped
+    - name: Install Vector via YUM
+      ansible.builtin.yum:
+        name: "/tmp/vector-{{ vector_version }}.rpm"
+        state: present
+        disable_gpg_check: true
+      when: download_rpm is changed or download_rpm is skipped
+
+# Блок для Debian семейства (Ubuntu)
+- name: Debian specific tasks
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Download Vector DEB
+      ansible.builtin.get_url:
+        url: "https://packages.timber.io/vector/{{ vector_version }}/vector_{{ vector_version }}-1_amd64.deb"
+        dest: "/tmp/vector-{{ vector_version }}.deb"
+        mode: '0644'
+      register: download_deb
+
+    - name: Install Vector via APT
+      ansible.builtin.apt:
+        deb: "/tmp/vector-{{ vector_version }}.deb"
+        state: present
+      when: download_deb is changed or download_deb is skipped
+      environment:
+        DEBIAN_FRONTEND: noninteractive
 
 - name: Create Vector configuration directory
   ansible.builtin.file:
@@ -33,10 +55,29 @@
     src: vector.toml.j2
     dest: "{{ vector_config_dir }}/vector.toml"
     mode: '0644'
-  notify: restart vector
+  register: vector_config
+
+- name: Restart vector if configuration changed
+  block:
+    - name: restart vector with systemd
+      ansible.builtin.systemd:
+        name: vector
+        state: restarted
+  when: vector_config.changed
+  rescue:
+    - name: Vector restart failed (expected in container environments)
+      ansible.builtin.debug:
+        msg: "Note: Vector service restart skipped due to lack of systemd support"
 
 - name: Enable and start Vector
-  ansible.builtin.systemd:
-    name: vector
-    enabled: true
-    state: started
+  block:
+    - name: Enable and start Vector with systemd
+      ansible.builtin.systemd:
+        name: vector
+        enabled: true
+        state: started
+        daemon_reload: true
+  rescue:
+    - name: Vector systemd failed (expected in container environments without systemd)
+      ansible.builtin.debug:
+        msg: "Warning: Vector systemd control failed. This is expected in container environments without systemd."

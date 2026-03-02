@@ -1,0 +1,9 @@
+---
+- name: Cleanup
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Example cleanup
+      ansible.builtin.debug:
+        msg: "Cleanup playbook - use for any pre-test cleanup"
+      changed_when: false

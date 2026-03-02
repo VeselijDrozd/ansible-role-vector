@@ -1,6 +1,8 @@
 ---
 galaxy_info:
-  author: r.grivnyashkin
+  author: rgrivnyashkin
+  namespace: rgrivnyashkin
+  role_name: role_vector
   description: Vector role for logs collection
   company: netology_students
   license: MIT

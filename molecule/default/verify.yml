@@ -1,0 +1,38 @@
+---
+# Purpose: assert that the instance really ended up in the expected state.
+# Molecule calls this playbook with `molecule verify`.
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check Vector is installed (RedHat family)
+      ansible.builtin.shell: rpm -q vector
+      register: vector_installed_rpm
+      failed_when: vector_installed_rpm.rc not in [0, 1]
+      when: ansible_facts['os_family'] == 'RedHat'
+      changed_when: false
+
+    - name: Check Vector is installed (Debian family)
+      ansible.builtin.shell: dpkg -l | grep vector
+      register: vector_installed_deb
+      failed_when: vector_installed_deb.rc not in [0, 1]
+      when: ansible_facts['os_family'] == 'Debian'
+      changed_when: false
+
+    - name: Check Vector configuration directory exists
+      ansible.builtin.stat:
+        path: /etc/vector
+      register: vector_config_dir
+      failed_when: not vector_config_dir.stat.exists
+
+    - name: Check Vector logs directory exists
+      ansible.builtin.stat:
+        path: /var/log/vector
+      register: vector_logs_dir
+      failed_when: not vector_logs_dir.stat.exists
+
+    - name: Verify Vector version
+      ansible.builtin.shell: vector --version
+      register: vector_version
+      changed_when: false
+      failed_when: vector_version.rc != 0

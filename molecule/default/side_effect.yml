@@ -1,0 +1,8 @@
+---
+- name: Side effect
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Example side effect
+      ansible.builtin.debug:
+        msg: "This is a side effect playbook - can be used to verify state after role application"
