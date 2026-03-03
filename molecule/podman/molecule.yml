@@ -1,0 +1,27 @@
+---
+driver:
+  name: podman
+
+platforms:
+  - name: almalinux-9
+    image: almalinux:9
+    pre_build_image: true
+    command: bash -c "exec sleep infinity"
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rshared
+    cgroupns_mode: host
+    env:
+      container: podman
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp/.ansible/tmp
+      retry_files_enabled: False
+  playbooks:
+    converge: converge.yml
+    verify: verify.yml
+  inventory:
+    host_vars: {}
+    group_vars: {}

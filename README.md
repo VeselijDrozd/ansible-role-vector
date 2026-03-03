@@ -59,9 +59,35 @@ Author Information
 Testing & Development
 ---------------------
 
-This role includes a Molecule scenario (`molecule/default`) which builds 3 Docker
-containers (AlmaLinux 9, Ubuntu 22.04, Debian 12) and applies the role against
-each one.  The test sequence run by `molecule test` performs:
+### Molecule Test Scenarios
+
+This role includes two Molecule test scenarios:
+
+#### 1. **Default Scenario** (Docker)
+
+Located in `molecule/default/`, this scenario uses Docker to test against 3 platforms:
+- AlmaLinux 9
+- Ubuntu 22.04
+- Debian 12
+
+Run with:
+```bash
+molecule test
+```
+
+#### 2. **Podman Scenario**
+
+Located in `molecule/podman/`, this scenario uses Podman and tests against:
+- AlmaLinux 9
+
+Run with:
+```bash
+molecule test -s podman
+```
+
+### Test Sequence
+
+The test sequence performed by `molecule test` includes:
 
 1. `cleanup` / `destroy` – ensure a clean slate
 2. `create` – start containers
@@ -75,23 +101,61 @@ each one.  The test sequence run by `molecule test` performs:
 
 > ⚠️ during preparation the first `setup` task may report an interpreter error
 > on Debian/Ubuntu images; this is normal because Python is not yet
-> installed.  The playbook now installs Python first and re‑runs `setup` so the
+> installed. The playbook now installs Python first and re-runs `setup` so the
 > error is harmless.
 
-**Systemd note:** the default Docker images Molecule uses do *not* run
-systemd as PID 1.  In those containers any attempt to run the `systemd` module
-results in messages such as
+### Using Tox
+
+[Tox](https://tox.readthedocs.io/) is configured to automate testing across multiple Python and Ansible versions.
+
+#### Installation
+
+Install tox:
+```bash
+pip install tox
+```
+
+Or use the included requirements file:
+```bash
+pip install -r tox-requirements.txt
+```
+
+#### Running Tests with Tox
+
+Run all test environments:
+```bash
+tox
+```
+
+Run a specific test environment:
+```bash
+tox -e py39-ansible210
+tox -e py37-ansible30
+```
+
+List available environments:
+```bash
+tox -l
+```
+
+By default, tox uses the **Podman scenario** (`-s podman`) and cleans up containers
+(`--destroy always`) after testing. This is configured in `tox.ini`.
+
+### Systemd Note
+
+Container images do not run systemd as PID 1. In those containers any attempt to
+run the `systemd` module results in messages such as:
 
 ```
 Service is in unknown state
 System has not been booted with systemd as init system (PID 1)
 ```
 
-Those failures are caught by rescue blocks in the role and are no longer shown
+These failures are caught by rescue blocks in the role and are no longer shown
 because the task is guarded with `when: ansible_facts['service_mgr']=='systemd'`.
 They do not indicate a problem with the role; they simply reflect the limited
-container environment.  If you wish to test real service management you must
-use a VM or an image that boots systemd.
+container environment. If you wish to test real service management, use a VM
+or an image that boots systemd.
 
 Configuration
 -------------
@@ -109,13 +173,32 @@ retry_files_enabled = False
 Running Tests
 -------------
 
+### Quick Start
+
+For Molecule tests with Docker:
 ```bash
-# execute the full scenario, including idempotence check
+# Run the default Docker scenario
 molecule test
 
-# or run only the converge/verify step on existing instances
+# Or run only converge and verify on existing instances
 molecule converge && molecule verify
 ```
 
-All tests should complete with exit code 0 and without unexpected errors.
+For Podman-based tests:
+```bash
+# Run the podman scenario
+molecule test -s podman
+```
 
+### Using Tox for Complete Test Coverage
+
+For comprehensive testing across multiple Python and Ansible versions:
+```bash
+# Run all configured test environments
+tox
+
+# Run a specific environment
+tox -e py39-ansible210
+```
+
+All tests should complete with exit code 0 and without unexpected errors.
